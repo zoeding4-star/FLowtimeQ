@@ -7,7 +7,6 @@ shape ``(n, 2)`` and ``rewards`` has shape ``(n, 1)``.
 import numpy as np
 import jax
 import jax.numpy as jnp
-from sklearn.datasets import make_moons, make_swiss_roll
 
 # Domain bounds for the 2D action space.
 DOMAIN_MIN, DOMAIN_MAX = -4.0, 4.0
@@ -17,6 +16,8 @@ DOMAIN_MIN, DOMAIN_MAX = -4.0, 4.0
 # REFERENCE SAMPLERS (Returns Tuple: Data, Rewards)
 # ============================================================================
 def _sample_moons(n, noise=0.1):
+    from sklearn.datasets import make_moons
+
     # 1. Generate using sklearn
     data, y = make_moons(n_samples=n, noise=noise)
     data = data.astype(np.float32)
@@ -52,8 +53,18 @@ def _sample_two_spirals(n):
 
 
 def _sample_swissroll(n, noise=1.0):
-    data, _ = make_swiss_roll(n_samples=n, noise=noise)
-    data = data.astype(np.float32)[:, [0, 2]]
+    try:
+        from sklearn.datasets import make_swiss_roll
+
+        data, _ = make_swiss_roll(n_samples=n, noise=noise)
+        data = data.astype(np.float32)[:, [0, 2]]
+    except ImportError:
+        # Same 2D projection used by sklearn's generator.  Keeping this local
+        # makes the CPU ablation runnable in the lean QAM environment.
+        t = 1.5 * np.pi * (1.0 + 2.0 * np.random.rand(n))
+        data = np.stack([t * np.cos(t), t * np.sin(t)], axis=-1)
+        data += noise * np.random.randn(n, 2)
+        data = data.astype(np.float32)
     data /= 5.0
 
     # Reference Reward: sum(data^2) / 9

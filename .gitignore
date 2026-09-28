@@ -19,5 +19,11 @@ fawac-reproduce
 rebuttal
 online_finetuning
 2d_experiment/toy_experiment/
+2d_experiment/results/
+2d_experiment/*.log
+wandb/
+.env
+.ipynb_checkpoints/
+requirements.txt.bak
 .claude
 scripts
